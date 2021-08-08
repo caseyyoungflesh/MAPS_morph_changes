@@ -1,0 +1,9 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+Data/MAPS_data.csv
+Data/bird_phylo/tree-pruner*
+Data/GMTED2010_mean/
+Data/Gen_time_Bird_et_al_2020_table_4.csv
+Data/Hendry_et_al_2008_Mol_Eco.csv
