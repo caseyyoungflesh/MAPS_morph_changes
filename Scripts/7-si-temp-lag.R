@@ -5,7 +5,7 @@
 
 # set dir ----------------------------------------------------------------
 
-run_date <- '2021-07-30'
+run_date <- '2022-01-23'
 maps_master_date <- '2021-07-28'
 idx_tle_date <- '2021-07-28'
 daymet_process_date <- '2021-04-02'
@@ -62,32 +62,39 @@ daymet_l2$year <- daymet_l2$year + YR_LAG
 mdata_l2 <- dplyr::left_join(mdata, daymet_l2, by = c('station', 'year')) %>%
   dplyr::mutate(sc_temp = scale(June_tmax, scale = FALSE)[,1] / scf_temp)
 
+#mean station temp
+mn_st_temp <- dplyr::group_by(daymet, station) %>%
+  dplyr::summarize(mn_st_temp = mean(June_tmax)) %>%  
+  dplyr::ungroup()
+
 #sp_id for each cn_id
 cn_sp <- unique(mdata_l0[,c('sp_id', 'cn_id')])
 
 
 # Data L0 --------------------------------------------------------------
 
-#calculate mean temp each cn_id, then scale within each species
-mn_st_temp_df_l0 <- mdata_l0 %>%
-  dplyr::group_by(sp_id, cn_id) %>%
-  dplyr::summarize(mn_st_temp = mean(June_tmax)) %>%
+#join with mean station temp and scale mean station temp within each species
+#needs to be ordered by cn_sp (species ID for each cn_id)
+mn_st_temp_df_l0 <- dplyr::left_join(mdata_l0, mn_st_temp, by = 'station') %>%
+  dplyr::select(station, sp_id, cn_id, mn_st_temp) %>%
+  dplyr::distinct(cn_id, .keep_all = TRUE) %>%
+  dplyr::group_by(sp_id) %>%
   dplyr::mutate(sc_mn_st_temp = scale(mn_st_temp, scale = FALSE)[,1] / scf_temp) %>%
   dplyr::ungroup()
 
 DATA_l0 <- list(N = NROW(mdata_l0), #number of temp data points
-                Nsp = length(unique(mdata_l0$sp_id)), #number of species
-                Nsc = length(unique(mdata_l0$cn_id)), #number of y data points
-                y = mdata_l0$size_idx,
-                temp = mdata_l0$sc_temp,
-                mn_st_temp = mn_st_temp_df_l0$sc_mn_st_temp, #mean temp at each station, centered for each species
-                sp = mdata_l0$sp_id,
-                cn_id = mdata_l0$cn_id, 
-                cn_sp = cn_sp$sp_id, 
-                daymet = daymet,
-                scf_temp = scf_temp,
-                mn_st_temp_df_l0 = mn_st_temp_df_l0,
-                pro_data = mdata_l0) 
+             Nsp = length(unique(mdata_l0$sp_id)), #number of species
+             Nsc = length(unique(mdata_l0$cn_id)), #number of y data points
+             y = mdata_l0$size_idx,
+             temp = mdata_l0$sc_temp,
+             mn_st_temp = mn_st_temp_df_l0$sc_mn_st_temp, #mean temp at each station, centered for each species
+             sp = mdata_l0$sp_id,
+             cn_id = mdata_l0$cn_id, 
+             cn_sp = cn_sp$sp_id, 
+             daymet = daymet,
+             scf_temp = scf_temp,
+             mn_st_temp_df_l0 = mn_st_temp_df_l0,
+             pro_data = mdata_l0) 
 
 
 # Call Stan model L0 --------------------------------------------------------------
@@ -101,31 +108,35 @@ STEP_SIZE <- 0.03
 CHAINS <- 4
 ITER <- 6000
 
-fit_l0 <- rstan::stan(paste0(dir, 'Scripts/Model_files/morph-temp-ss.stan'),
-                      data = DATA_l0,
-                      chains = CHAINS,
-                      iter = ITER,
-                      cores = CHAINS,
-                      pars = c('alpha',
-                               'beta',
-                               'kappa',
-                               'gamma',
-                               'theta',
-                               'mu_kappa',
-                               'sigma_kappa',
-                               'mu_gamma',
-                               'mu_theta',
-                               'sigma_alpha',
-                               'sigma_beta',
-                               'sigma_gt',
-                               'Rho_gt',
-                               'sigma_proc',
-                               'lambda_proc',
-                               'kappa_proc',
-                               'nu'),
-                      control = list(adapt_delta = DELTA,
-                                     max_treedepth = TREE_DEPTH,
-                                     stepsize = STEP_SIZE))
+fit_l0 <- rstan::stan(paste0(dir, 'Scripts/Model_files/morph-temp-ss2.stan'),
+                   data = DATA_l0,
+                   chains = CHAINS,
+                   iter = ITER,
+                   cores = CHAINS,
+                   pars = c('alpha',
+                            'beta',
+                            'gamma',
+                            'theta',
+                            'gamma2',
+                            'theta2',
+                            'mu_gamma',
+                            'mu_theta',
+                            'mu_gamma2',
+                            'mu_theta2',
+                            'sigma_alpha',
+                            'sigma_beta',
+                            'sigma_gt',
+                            'sigma_gt2',
+                            'Rho_gt',
+                            'Rho_gt2',
+                            'sigma_proc',
+                            'lambda_proc',
+                            'kappa_proc',
+                            'nu'),
+                   #'y_rep'), 
+                   control = list(adapt_delta = DELTA,
+                                  max_treedepth = TREE_DEPTH,
+                                  stepsize = STEP_SIZE))
 
 
 # PPC sim --------------------------------------------------------
@@ -198,18 +209,23 @@ MCMCvis::MCMCdiag(fit_l0,
                   add_obj = list(DATA_l0, ppc_sim_l0),
                   add_obj_names = c(paste0('si-temp-l0-data-', run_date),
                                     paste0('ppc-sim-l0-', run_date)),
-                  cp_file = c('Model_files/morph-temp-ss.stan', 
-                              '7-si-temp-lag.R'),
-                  cp_file_names = c(paste0('morph-temp-ss-', run_date, '.stan'),
-                                    paste0('7-si-temp-lag-', run_date, '.R')))
+                  cp_file = c('Model_files/morph-temp-ss2.stan', 
+                              '8-si-temp-lag.R'),
+                  cp_file_names = c(paste0('morph-temp-ss2-', run_date, '.stan'),
+                                    paste0('8-si-temp-lag-', run_date, '.R')))
+
+# library(shinystan)
+# shinystan::launch_shinystan(fit)
 
 
 # Data L1 --------------------------------------------------------------
 
-#calculate mean temp each cn_id, then scale within each species
-mn_st_temp_df_l1 <- mdata_l1 %>%
-  dplyr::group_by(sp_id, cn_id) %>%
-  dplyr::summarize(mn_st_temp = mean(June_tmax)) %>%
+#join with mean station temp and scale mean station temp within each species
+#needs to be ordered by cn_sp (species ID for each cn_id)
+mn_st_temp_df_l1 <- dplyr::left_join(mdata_l1, mn_st_temp, by = 'station') %>%
+  dplyr::select(station, sp_id, cn_id, mn_st_temp) %>%
+  dplyr::distinct(cn_id, .keep_all = TRUE) %>%
+  dplyr::group_by(sp_id) %>%
   dplyr::mutate(sc_mn_st_temp = scale(mn_st_temp, scale = FALSE)[,1] / scf_temp) %>%
   dplyr::ungroup()
 
@@ -230,31 +246,35 @@ DATA_l1 <- list(N = NROW(mdata_l1), #number of temp data points
 
 # Call Stan model l1 --------------------------------------------------------------
 
-fit_l1 <- rstan::stan(paste0(dir, 'Scripts/Model_files/morph-temp-ss.stan'),
-                      data = DATA_l1,
-                      chains = CHAINS,
-                      iter = ITER,
-                      cores = CHAINS,
-                      pars = c('alpha',
-                               'beta',
-                               'kappa',
-                               'gamma',
-                               'theta',
-                               'mu_kappa',
-                               'sigma_kappa',
-                               'mu_gamma',
-                               'mu_theta',
-                               'sigma_alpha',
-                               'sigma_beta',
-                               'sigma_gt',
-                               'Rho_gt',
-                               'sigma_proc',
-                               'lambda_proc',
-                               'kappa_proc',
-                               'nu'),
-                      control = list(adapt_delta = DELTA,
-                                     max_treedepth = TREE_DEPTH,
-                                     stepsize = STEP_SIZE))
+fit_l1 <- rstan::stan(paste0(dir, 'Scripts/Model_files/morph-temp-ss2.stan'),
+                   data = DATA_l1,
+                   chains = CHAINS,
+                   iter = ITER,
+                   cores = CHAINS,
+                   pars = c('alpha',
+                            'beta',
+                            'gamma',
+                            'theta',
+                            'gamma2',
+                            'theta2',
+                            'mu_gamma',
+                            'mu_theta',
+                            'mu_gamma2',
+                            'mu_theta2',
+                            'sigma_alpha',
+                            'sigma_beta',
+                            'sigma_gt',
+                            'sigma_gt2',
+                            'Rho_gt',
+                            'Rho_gt2',
+                            'sigma_proc',
+                            'lambda_proc',
+                            'kappa_proc',
+                            'nu'),
+                   #'y_rep'), 
+                   control = list(adapt_delta = DELTA,
+                                  max_treedepth = TREE_DEPTH,
+                                  stepsize = STEP_SIZE))
 
 
 # PPC sim -----------------------------------------------------------------
@@ -280,18 +300,23 @@ MCMCvis::MCMCdiag(fit_l1,
                   add_obj = list(DATA_l1, ppc_sim_l1),
                   add_obj_names = c(paste0('si-temp-l1-data-', run_date),
                                     paste0('ppc-sim-l1-', run_date)),
-                  cp_file = c('Model_files/morph-temp-ss.stan', 
-                              '7-si-temp-lag.R'),
-                  cp_file_names = c(paste0('morph-temp-ss-', run_date, '.stan'),
-                                    paste0('7-si-temp-lag-', run_date, '.R')))
+                  cp_file = c('Model_files/morph-temp-ss2.stan', 
+                              '8-si-temp-lag.R'),
+                  cp_file_names = c(paste0('morph-temp-ss2-', run_date, '.stan'),
+                                    paste0('8-si-temp-lag-', run_date, '.R')))
+
+# library(shinystan)
+# shinystan::launch_shinystan(fit)
 
 
 # Data l2 --------------------------------------------------------------
 
-#calculate mean temp each cn_id, then scale within each species
-mn_st_temp_df_l2 <- mdata_l2 %>%
-  dplyr::group_by(sp_id, cn_id) %>%
-  dplyr::summarize(mn_st_temp = mean(June_tmax)) %>%
+#join with mean station temp and scale mean station temp within each species
+#needs to be ordered by cn_sp (species ID for each cn_id)
+mn_st_temp_df_l2 <- dplyr::left_join(mdata_l2, mn_st_temp, by = 'station') %>%
+  dplyr::select(station, sp_id, cn_id, mn_st_temp) %>%
+  dplyr::distinct(cn_id, .keep_all = TRUE) %>%
+  dplyr::group_by(sp_id) %>%
   dplyr::mutate(sc_mn_st_temp = scale(mn_st_temp, scale = FALSE)[,1] / scf_temp) %>%
   dplyr::ungroup()
 
@@ -312,31 +337,35 @@ DATA_l2 <- list(N = NROW(mdata_l2), #number of temp data points
 
 # Call Stan model l2 --------------------------------------------------------------
 
-fit_l2 <- rstan::stan(paste0(dir, 'Scripts/Model_files/morph-temp-ss.stan'),
-                      data = DATA_l2,
-                      chains = CHAINS,
-                      iter = ITER,
-                      cores = CHAINS,
-                      pars = c('alpha',
-                               'beta',
-                               'kappa',
-                               'gamma',
-                               'theta',
-                               'mu_kappa',
-                               'sigma_kappa',
-                               'mu_gamma',
-                               'mu_theta',
-                               'sigma_alpha',
-                               'sigma_beta',
-                               'sigma_gt',
-                               'Rho_gt',
-                               'sigma_proc',
-                               'lambda_proc',
-                               'kappa_proc',
-                               'nu'),
-                      control = list(adapt_delta = DELTA,
-                                     max_treedepth = TREE_DEPTH,
-                                     stepsize = STEP_SIZE))
+fit_l2 <- rstan::stan(paste0(dir, 'Scripts/Model_files/morph-temp-ss2.stan'),
+                   data = DATA_l2,
+                   chains = CHAINS,
+                   iter = ITER,
+                   cores = CHAINS,
+                   pars = c('alpha',
+                            'beta',
+                            'gamma',
+                            'theta',
+                            'gamma2',
+                            'theta2',
+                            'mu_gamma',
+                            'mu_theta',
+                            'mu_gamma2',
+                            'mu_theta2',
+                            'sigma_alpha',
+                            'sigma_beta',
+                            'sigma_gt',
+                            'sigma_gt2',
+                            'Rho_gt',
+                            'Rho_gt2',
+                            'sigma_proc',
+                            'lambda_proc',
+                            'kappa_proc',
+                            'nu'),
+                   #'y_rep'), 
+                   control = list(adapt_delta = DELTA,
+                                  max_treedepth = TREE_DEPTH,
+                                  stepsize = STEP_SIZE))
 
 
 # PPC sim -----------------------------------------------------------------
@@ -362,10 +391,13 @@ MCMCvis::MCMCdiag(fit_l2,
                   add_obj = list(DATA_l2, ppc_sim_l2),
                   add_obj_names = c(paste0('si-temp-l2-data-', run_date),
                                     paste0('ppc-sim-l2-', run_date)),
-                  cp_file = c('Model_files/morph-temp-ss.stan', 
-                              '7-si-temp-lag.R'),
-                  cp_file_names = c(paste0('morph-temp-ss-', run_date, '.stan'),
-                                    paste0('7-si-temp-lag-', run_date, '.R')))
+                  cp_file = c('Model_files/morph-temp-ss2.stan', 
+                              '8-si-temp-lag.R'),
+                  cp_file_names = c(paste0('morph-temp-ss2-', run_date, '.stan'),
+                                    paste0('8-si-temp-lag-', run_date, '.R')))
+
+# library(shinystan)
+# shinystan::launch_shinystan(fit)
 
 
 # PPC plots ----------------------------------------------------------------
