@@ -25,7 +25,7 @@ Youngflesh, C. Saracco, J.F., Siegel, R.B., Tingley, M.W. Abiotic conditions dri
   - `11-haldanes.R`
   - `model_files`
     - `morph-temp-space.stan`
-    - `morph-temp-ss.stan`
+    - `morph-temp-ss2.stan`
     - `morph-tle.stan`
     - `temp_sp_cov.stan`
 * `Data/`
