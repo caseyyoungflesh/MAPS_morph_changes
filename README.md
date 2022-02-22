@@ -4,7 +4,7 @@ Code for characterizing avian morphological change over time, latitude, elevatio
 
 **Associated publications:**
 
-Youngflesh, C. Saracco, J.F., Siegel, R.B., Tingley, M.W. Abiotic conditions shape spatial and temporal morphological variation in North American birds. _**In review**_
+Youngflesh, C, JF Saracco, RB Siegel, MW Tingley. [Abiotic conditions shape spatial and temporal morphological variation in North American birds.](https://www.biorxiv.org/content/10.1101/2022.02.17.480905v1) **_bioRxiv_**  doi: 10.1101/2022.02.17.480905
 
 **Repository structure:**
 
