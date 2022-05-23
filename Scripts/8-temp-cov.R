@@ -162,3 +162,43 @@ for (i in 1:100)
 }
 dev.off()
 
+
+# PPO ---------------------------------------------------------------------
+
+#alpha ~ N(0, 5)
+PR <- rnorm(10000, 0, 5)
+MCMCvis::MCMCtrace(fit_sp,
+                   params = 'alpha',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('temp-sp-cov-trace-alpha-', run_date, '.pdf'))
+
+#beta ~ N(0, 5)
+PR <- rnorm(10000, 0, 5)
+MCMCvis::MCMCtrace(fit_sp,
+                   params = 'beta',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('temp-sp-cov-trace-beta-', run_date, '.pdf'))
+
+#sigma ~ HN(0, 5)
+PR_p <- rnorm(10000, 0, 5)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_sp,
+                   params = 'sigma',
+                   ISB = 'FALSE',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('temp-sp-cov-trace-sigma-', run_date, '.pdf'))
+
+#lambda ~ U(0, 1)
+PR <- runif(10000, 0, 1)
+MCMCvis::MCMCtrace(fit_sp,
+                   params = 'lambda',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('temp-sp-cov-trace-lambda-', run_date, '.pdf'))
