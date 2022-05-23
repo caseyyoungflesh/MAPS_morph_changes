@@ -422,3 +422,349 @@ ppc_plot_fun(sim_obj = ppc_sim_l1, file_name = 'PPC_l1.pdf')
 
 setwd(paste0(dir, '/Results/si-temp-l2-', run_date))
 ppc_plot_fun(sim_obj = ppc_sim_l2, file_name = 'PPC_l2.pdf')
+
+
+# PPO ---------------------------------------------------------------------
+
+#lag 0
+#mu_gamma ~ N(0, 2)
+PR <- rnorm(10000, 0, 2)
+MCMCvis::MCMCtrace(fit_l0,
+                   params = 'mu_gamma',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l0-ss2-trace-mu_gamma-', run_date, '.pdf'))
+
+#mu_theta ~ N(0, 2)
+PR <- rnorm(10000, 0, 2)
+MCMCvis::MCMCtrace(fit_l0,
+                   params = 'mu_theta',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l0-ss2-trace-mu_theta-', run_date, '.pdf'))
+
+#mu_gamma2 ~ N(0, 2)
+PR <- rnorm(10000, 0, 2)
+MCMCvis::MCMCtrace(fit_l0,
+                   params = 'mu_gamma2',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l0-ss2-trace-mu_gamma2-', run_date, '.pdf'))
+
+#mu_theta2 ~ N(0, 2)
+PR <- rnorm(10000, 0, 2)
+MCMCvis::MCMCtrace(fit_l0,
+                   params = 'mu_theta2',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l0-ss2-trace-mu_theta2-', run_date, '.pdf'))
+
+#sigma_alpha ~ HN(0, 2)
+PR_p <- rnorm(10000, 0, 2)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l0,
+                   params = 'sigma_alpha',
+                   ISB = 'FALSE',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l0-ss2-trace-sigma_alpha-', run_date, '.pdf'))
+
+#sigma_beta ~ HN(0, 2)
+PR_p <- rnorm(10000, 0, 2)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l0,
+                   params = 'sigma_beta',
+                   ISB = 'FALSE',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l0-ss2-trace-sigma_beta-', run_date, '.pdf'))
+
+#lambda_proc ~ HN(0, 1)
+PR_p <- rnorm(10000, 0, 1)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l0,
+                   params = 'lambda_proc',
+                   ISB = 'FALSE',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l0-ss2-trace-lambda_proc-', run_date, '.pdf'))
+
+#kappa_proc ~ HN(0, 1)
+PR_p <- rnorm(10000, 0, 1)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l0,
+                   params = 'kappa_proc',
+                   ISB = 'FALSE',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l0-ss2-trace-kappa_proc-', run_date, '.pdf'))
+
+#sigma_gt ~ HN(0, 2)
+PR_p <- rnorm(10000, 0, 2)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l0,
+                   params = 'sigma_gt',
+                   ISB = 'FALSE',
+                   exact = FALSE,
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l0-ss2-trace-sigma_gt-', run_date, '.pdf'))
+
+#sigma_gt2 ~ HN(0, 2)
+PR_p <- rnorm(10000, 0, 2)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l0,
+                   params = 'sigma_gt2',
+                   ISB = 'FALSE',
+                   exact = FALSE,
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l0-ss2-trace-sigma_gt2-', run_date, '.pdf'))
+
+#nu ~ gamma(2, 0.1)
+PR <- rgamma(10000, 2, 0.1)
+MCMCvis::MCMCtrace(fit_l0,
+                   params = 'nu',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l0-ss2-trace-nu-', run_date, '.pdf'))
+
+#lag 1
+#mu_gamma ~ N(0, 2)
+PR <- rnorm(10000, 0, 2)
+MCMCvis::MCMCtrace(fit_l1,
+                   params = 'mu_gamma',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l1-ss2-trace-mu_gamma-', run_date, '.pdf'))
+
+#mu_theta ~ N(0, 2)
+PR <- rnorm(10000, 0, 2)
+MCMCvis::MCMCtrace(fit_l1,
+                   params = 'mu_theta',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l1-ss2-trace-mu_theta-', run_date, '.pdf'))
+
+#mu_gamma2 ~ N(0, 2)
+PR <- rnorm(10000, 0, 2)
+MCMCvis::MCMCtrace(fit_l1,
+                   params = 'mu_gamma2',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l1-ss2-trace-mu_gamma2-', run_date, '.pdf'))
+
+#mu_theta2 ~ N(0, 2)
+PR <- rnorm(10000, 0, 2)
+MCMCvis::MCMCtrace(fit_l1,
+                   params = 'mu_theta2',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l1-ss2-trace-mu_theta2-', run_date, '.pdf'))
+
+#sigma_alpha ~ HN(0, 2)
+PR_p <- rnorm(10000, 0, 2)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l1,
+                   params = 'sigma_alpha',
+                   ISB = 'FALSE',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l1-ss2-trace-sigma_alpha-', run_date, '.pdf'))
+
+#sigma_beta ~ HN(0, 2)
+PR_p <- rnorm(10000, 0, 2)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l1,
+                   params = 'sigma_beta',
+                   ISB = 'FALSE',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l1-ss2-trace-sigma_beta-', run_date, '.pdf'))
+
+#lambda_proc ~ HN(0, 1)
+PR_p <- rnorm(10000, 0, 1)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l1,
+                   params = 'lambda_proc',
+                   ISB = 'FALSE',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l1-ss2-trace-lambda_proc-', run_date, '.pdf'))
+
+#kappa_proc ~ HN(0, 1)
+PR_p <- rnorm(10000, 0, 1)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l1,
+                   params = 'kappa_proc',
+                   ISB = 'FALSE',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l1-ss2-trace-kappa_proc-', run_date, '.pdf'))
+
+#sigma_gt ~ HN(0, 2)
+PR_p <- rnorm(10000, 0, 2)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l1,
+                   params = 'sigma_gt',
+                   ISB = 'FALSE',
+                   exact = FALSE,
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l1-ss2-trace-sigma_gt-', run_date, '.pdf'))
+
+#sigma_gt2 ~ HN(0, 2)
+PR_p <- rnorm(10000, 0, 2)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l1,
+                   params = 'sigma_gt2',
+                   ISB = 'FALSE',
+                   exact = FALSE,
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l1-ss2-trace-sigma_gt2-', run_date, '.pdf'))
+
+#nu ~ gamma(2, 0.1)
+PR <- rgamma(10000, 2, 0.1)
+MCMCvis::MCMCtrace(fit_l1,
+                   params = 'nu',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l1-ss2-trace-nu-', run_date, '.pdf'))
+
+#lag 2
+#mu_gamma ~ N(0, 2)
+PR <- rnorm(10000, 0, 2)
+MCMCvis::MCMCtrace(fit_l2,
+                   params = 'mu_gamma',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l2-ss2-trace-mu_gamma-', run_date, '.pdf'))
+
+#mu_theta ~ N(0, 2)
+PR <- rnorm(10000, 0, 2)
+MCMCvis::MCMCtrace(fit_l2,
+                   params = 'mu_theta',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l2-ss2-trace-mu_theta-', run_date, '.pdf'))
+
+#mu_gamma2 ~ N(0, 2)
+PR <- rnorm(10000, 0, 2)
+MCMCvis::MCMCtrace(fit_l2,
+                   params = 'mu_gamma2',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l2-ss2-trace-mu_gamma2-', run_date, '.pdf'))
+
+#mu_theta2 ~ N(0, 2)
+PR <- rnorm(10000, 0, 2)
+MCMCvis::MCMCtrace(fit_l2,
+                   params = 'mu_theta2',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l2-ss2-trace-mu_theta2-', run_date, '.pdf'))
+
+#sigma_alpha ~ HN(0, 2)
+PR_p <- rnorm(10000, 0, 2)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l2,
+                   params = 'sigma_alpha',
+                   ISB = 'FALSE',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l2-ss2-trace-sigma_alpha-', run_date, '.pdf'))
+
+#sigma_beta ~ HN(0, 2)
+PR_p <- rnorm(10000, 0, 2)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l2,
+                   params = 'sigma_beta',
+                   ISB = 'FALSE',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l2-ss2-trace-sigma_beta-', run_date, '.pdf'))
+
+#lambda_proc ~ HN(0, 1)
+PR_p <- rnorm(10000, 0, 1)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l2,
+                   params = 'lambda_proc',
+                   ISB = 'FALSE',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l2-ss2-trace-lambda_proc-', run_date, '.pdf'))
+
+#kappa_proc ~ HN(0, 1)
+PR_p <- rnorm(10000, 0, 1)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l2,
+                   params = 'kappa_proc',
+                   ISB = 'FALSE',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l2-ss2-trace-kappa_proc-', run_date, '.pdf'))
+
+#sigma_gt ~ HN(0, 2)
+PR_p <- rnorm(10000, 0, 2)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l2,
+                   params = 'sigma_gt',
+                   ISB = 'FALSE',
+                   exact = FALSE,
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l2-ss2-trace-sigma_gt-', run_date, '.pdf'))
+
+#sigma_gt2 ~ HN(0, 2)
+PR_p <- rnorm(10000, 0, 2)
+PR <- PR_p[which(PR_p > 0)]
+MCMCvis::MCMCtrace(fit_l2,
+                   params = 'sigma_gt2',
+                   ISB = 'FALSE',
+                   exact = FALSE,
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l2-ss2-trace-sigma_gt2-', run_date, '.pdf'))
+
+#nu ~ gamma(2, 0.1)
+PR <- rgamma(10000, 2, 0.1)
+MCMCvis::MCMCtrace(fit_l2,
+                   params = 'nu',
+                   priors = PR,
+                   pdf = TRUE,
+                   open_pdf = FALSE,
+                   filename = paste0('si-temp-l2-ss2-trace-nu-', run_date, '.pdf'))
+
