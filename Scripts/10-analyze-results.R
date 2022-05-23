@@ -162,6 +162,11 @@ round(mean(mt_ch_SI_L2), 2)
 round(apply(mt_ch_SI_L2, 2, function(x) quantile(x, probs = c(0.055, 0.945))), 2)
 round(sum(mt_ch_SI_L2 < 0) / NROW(mt_ch_SI_L2), 2)
 
+#species-specific - per 1 degree C
+g_ch_SI_L0 <- (MCMCvis::MCMCchains(si_temp_l0_fit, params = 'gamma')) / si_temp_l0_data$scf_temp
+g_ch_SI_L1 <- (MCMCvis::MCMCchains(si_temp_l1_fit, params = 'gamma')) / si_temp_l1_data$scf_temp
+sum(apply(g_ch_SI_L0, 2, mean) < 0) / NCOL(g_ch_SI_L0)
+
 
 # WI TIME param est -------------------------------------------------------
 
@@ -195,7 +200,10 @@ round(mean(g_ch_SI_sp_cov), 2)
 round(apply(g_ch_SI_sp_cov, 2, function(x) quantile(x, probs = c(0.055, 0.945))), 2)
 round(sum(g_ch_SI_sp_cov < 0) / NROW(g_ch_SI_sp_cov), 2)
 
+#species-specific
+b_ch_SI_space <- (MCMCvis::MCMCchains(si_temp_space_fit, params = 'beta'))
 
+            
 # compare response to space temp to temporal temp -------------------------
 
 #space is 10 degrees, time is 1 degree
@@ -207,6 +215,29 @@ mean(delta_l0) / (mean(mg_ch_SI_L0) * 10)
 mean(delta_l1) / (mean(mg_ch_SI_L1) * 10)
 mean(delta_l2) / (mean(mg_ch_SI_L2) * 10)
 
+#species-specific
+space_samp <- sample(1:NROW(b_ch_SI_space), 5000)
+l0_samp <- sample(1:NROW(g_ch_SI_L0), 5000)
+delta_ss_l0 <- b_ch_SI_space[space_samp,] - (g_ch_SI_L0[l0_samp,] * 10)
+
+#neg = larger negative impact of temp over space
+mn_delta <- apply(delta_ss_l0, 2, mean)
+sum(mn_delta < 0) / length(mn_delta)
+
+pdf(paste(fig_dir, 'temp_space_temp_time.pdf'), height = 16, width = 8)
+MCMCvis::MCMCplot(delta_ss_l0, 
+                  #labels = usp,
+                  labels = cn,
+                  guide_lines = TRUE,
+                  ci = c(50, 89),
+                  sz_labels = 0.75,
+                  main = 'Spatial temp effect on SI - temporal temp effect on SI (per 10 degree C)', 
+                  sz_med = 1.75,
+                  sz_thick = 5,
+                  sz_thin = 3,
+                  xlim = c(-2, 3))
+dev.off()
+            
 
 # WI LAT param est --------------------------------------------------------------------
 
@@ -648,7 +679,7 @@ MCMCvis::MCMCplot(si_sc,
                   labels = NULL,
                   sz_med = 2,
                   sz_thick = 7,
-                  sz_thin = 7,
+                  sz_thin = 5,
                   xlim = c(-0.15, 0.1))
 
 #species-specific estimates as circles, overall effect as caterpillar
@@ -745,7 +776,7 @@ MCMCvis::MCMCplot(si_sc,
                   labels = NULL,
                   sz_med = 2,
                   sz_thick = 7,
-                  sz_thin = 7,
+                  sz_thin = 5,
                   xlim = c(-0.6, 2))
 #species-specific estimates as circles, overall effect as caterpillar
 pmed_si_gamma <- apply(si_gamma_sc, 2, median)
@@ -867,7 +898,7 @@ MCMCvis::MCMCplot(si_sc,
                   labels = NULL,
                   sz_med = 2,
                   sz_thick = 7,
-                  sz_thin = 7,
+                  sz_thin = 5,
                   xlim = c(-1, 1.5))
 #species-specific estimates as circles, overall effect as caterpillar
 pmed_si_theta <- apply(si_theta_sc, 2, median)
@@ -909,7 +940,7 @@ MCMCvis::MCMCplot(wi_sc,
                   labels = NULL,
                   sz_med = 2,
                   sz_thick = 7,
-                  sz_thin = 7,
+                  sz_thin = 5,
                   xlim = c(-0.2, 1))
 #species-specific estimates as circles, overall effect as caterpillar
 pmed_wi_theta <- apply(wi_theta_sc, 2, median)
@@ -1467,7 +1498,7 @@ MCMCvis::MCMCplot(si_eta_sc,
                   main = 'SI ~ year',
                   sz_med = 1.75,
                   sz_thick = 5,
-                  sz_thin = 5,
+                  sz_thin = 3,
                   xlim = c(-0.4, 0.6))
 dev.off()
 
@@ -1480,7 +1511,7 @@ MCMCvis::MCMCplot(si_gamma_sc,
                   main = 'SI ~ lat',
                   sz_med = 1.75,
                   sz_thick = 5,
-                  sz_thin = 5,
+                  sz_thin = 3,
                   xlim = c(-1, 3))
 dev.off()
 
@@ -1493,7 +1524,7 @@ MCMCvis::MCMCplot(si_theta_sc,
                   main = 'SI ~ elev',
                   sz_med = 1.75,
                   sz_thick = 5,
-                  sz_thin = 5,
+                  sz_thin = 3,
                   xlim = c(-2, 2))
 dev.off()
 
@@ -1509,7 +1540,7 @@ MCMCvis::MCMCplot(wi_eta_sc,
                   main = 'WI ~ year',
                   sz_med = 1.75,
                   sz_thick = 5,
-                  sz_thin = 5,
+                  sz_thin = 3,
                   xlim = c(-0.6, 0.4))
 dev.off()
 
@@ -1522,7 +1553,7 @@ MCMCvis::MCMCplot(wi_gamma_sc,
                   main = 'WI ~ lat',
                   sz_med = 1.75,
                   sz_thick = 5,
-                  sz_thin = 5,
+                  sz_thin = 3,
                   xlim = c(-1, 1))
 dev.off()
 
@@ -1535,7 +1566,7 @@ MCMCvis::MCMCplot(wi_theta_sc,
                   main = 'WI ~ elev',
                   sz_med = 1.75,
                   sz_thick = 5,
-                  sz_thin = 5,
+                  sz_thin = 3,
                   xlim = c(-0.5, 1.5))
 dev.off()
 
@@ -1556,7 +1587,7 @@ MCMCvis::MCMCplot(si_temp_l0_sc_gamma,
                   main = 'gamma - SI ~ temp (lag 0)',
                   sz_med = 1.75,
                   sz_thick = 5,
-                  sz_thin = 5,
+                  sz_thin = 3,
                   xlim = c(-0.15, 0.05))
 dev.off()
 
@@ -1570,7 +1601,7 @@ MCMCvis::MCMCplot(si_temp_l1_sc_gamma,
                   main = 'gamma - SI ~ temp (lag 1)',
                   sz_med = 1.75,
                   sz_thick = 5,
-                  sz_thin = 5,
+                  sz_thin = 3,
                   xlim = c(-0.15, .1))
 dev.off()
 
@@ -1584,7 +1615,7 @@ MCMCvis::MCMCplot(si_temp_l2_sc_gamma,
                   main = 'gamma - SI ~ temp (lag 2)',
                   sz_med = 1.75,
                   sz_thick = 5,
-                  sz_thin = 5,
+                  sz_thin = 3,
                   xlim = c(-0.1, 0.05))
 dev.off()
 
@@ -1600,7 +1631,7 @@ MCMCvis::MCMCplot(si_temp_space_fit,
                   main = 'T effect ~ mean temp',
                   sz_med = 1.75,
                   sz_thick = 5,
-                  sz_thin = 5,
+                  sz_thin = 3,
                   xlim = c(-3, 2))
 dev.off()
 
@@ -1616,7 +1647,7 @@ MCMCvis::MCMCplot(per_ch_year[,1,],
                   main = 'absolute mass ~ year',
                   sz_med = 1.75,
                   sz_thick = 5,
-                  sz_thin = 5,
+                  sz_thin = 3,
                   xlim = c(-10, 20))
 dev.off()
 
@@ -1629,7 +1660,7 @@ MCMCvis::MCMCplot(per_ch_lat[,1,],
                   main = 'absolute mass ~ lat',
                   sz_med = 1.75,
                   sz_thick = 5,
-                  sz_thin = 5,
+                  sz_thin = 3,
                   xlim = c(-40, 80))
 dev.off()
 
@@ -1642,7 +1673,7 @@ MCMCvis::MCMCplot(per_ch_elev[,1,],
                   main = 'absolute mass ~ elev',
                   sz_med = 1.75,
                   sz_thick = 5,
-                  sz_thin = 5,
+                  sz_thin = 3,
                   xlim = c(-30, 30))
 dev.off()
 
@@ -1655,7 +1686,7 @@ MCMCvis::MCMCplot(per_ch_year[,2,],
                   main = 'absolute wing ~ year',
                   sz_med = 1.75,
                   sz_thick = 5,
-                  sz_thin = 5,
+                  sz_thin = 3,
                   xlim = c(-4, 4))
 dev.off()
 
@@ -1668,7 +1699,7 @@ MCMCvis::MCMCplot(per_ch_lat[,2,],
                   main = 'absolute wing ~ lat',
                   sz_med = 1.75,
                   sz_thick = 5,
-                  sz_thin = 5,
+                  sz_thin = 3,
                   xlim = c(-10, 20))
 dev.off()
 
@@ -1681,7 +1712,7 @@ MCMCvis::MCMCplot(per_ch_elev[,2,],
                   main = 'absolute wing ~ elev',
                   sz_med = 1.75,
                   sz_thick = 5,
-                  sz_thin = 5,
+                  sz_thin = 3,
                   xlim = c(-10, 15))
 dev.off()
 
