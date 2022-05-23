@@ -37,4 +37,5 @@ Youngflesh, C, JF Saracco, RB Siegel, MW Tingley. [Abiotic conditions shape spat
   - `Gen_time_Bird_et_al_2020_table_4.csv` [ignored - available [here](https://conbio.onlinelibrary.wiley.com/doi/abs/10.1111/cobi.13486)]
   - `Hendry_et_al_2008_Mol_Eco.csv` [ignored - available [here](https://onlinelibrary.wiley.com/doi/full/10.1111/j.1365-294X.2007.03428.x?casa_token=xSDmUC85ERkAAAAA%3Ap5kaUUhK9w2wV7MiVqOvU52Eo-2sjFA1_h977u6L0YiXTcEuhPIfPwU8G1H8Q3CgoCSdPtJBAwOHFEdp)]
 * `Results/` [ignored]
-* `Figures/` [ignored]
+* `Figures/`
+  - `PPO/` - prior posterior overlap
