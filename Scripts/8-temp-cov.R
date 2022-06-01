@@ -5,11 +5,10 @@
 
 # set dir ----------------------------------------------------------------
 
-run_date <- '2021-08-02'
+run_date <- '2022-06-01'
 maps_master_date <- '2021-07-28'
-idx_tle_date <- '2021-07-28'
 daymet_process_date <- '2021-04-02'
-temp_space_date <- '2021-07-30'
+temp_space_date <- '2022-05-25'
 phylo_date <- '2021-05-19'
 
 dir <- 'XXXX'
@@ -37,7 +36,8 @@ beta_sd_space <- MCMCvis::MCMCpstr(temp_space_fit, params = 'beta', fun = sd)[[1
 
 #read in daymet data
 setwd(paste0(dir, '/Data/daymet/processed/'))
-daymet <- readRDS(paste0('daymet-master-', daymet_process_date, '.rds'))
+daymet <- readRDS(paste0('daymet-master-', daymet_process_date, '.rds')) %>%
+  mutate(MJJ_tmax = (May_tmax + June_tmax + July_tmax) / 3) #using mean here does not do what might be expected
 
 #merge morph and temp data
 mdata <- temp_space_data$pro_data
@@ -52,10 +52,10 @@ scf_temp <- 10
 #mean temp for each species, centered
 mn_st_temp <- mdata2 %>%
   dplyr::group_by(sp_id, cn_id) %>%
-  dplyr::summarize(mn_June_tmax = mean(June_tmax)) %>%
+  dplyr::summarize(mn_MJJ_tmax = mean(MJJ_tmax)) %>%
   dplyr::ungroup() %>%
   dplyr::group_by(sp_id) %>%
-  dplyr::summarize(smt = mean(mn_June_tmax)) %>%
+  dplyr::summarize(smt = mean(mn_MJJ_tmax)) %>%
   dplyr::mutate(sp_mean_temp = scale(smt, scale = FALSE)[,1] / scf_temp) %>%
   dplyr::ungroup()
 
@@ -109,7 +109,7 @@ STEP_SIZE <- 0.1
 CHAINS <- 4
 ITER <- 5000
 
-fit_sp <- rstan::stan(paste0(dir, 'Scripts/Model_files/temp_sp_cov.stan'),
+fit_sp <- rstan::stan(paste0(dir, 'Scripts/Model_files/temp-sp-cov.stan'),
                       data = DATA_sp,
                       chains = CHAINS,
                       iter = ITER,
@@ -140,9 +140,9 @@ MCMCvis::MCMCdiag(fit_sp,
                   obj_name = paste0('temp-sp-cov-fit-', run_date),
                   add_obj = list(DATA_sp),
                   add_obj_names = paste0('temp-sp-cov-data-', run_date),
-                  cp_file = c('Model_files/temp_sp_cov.stan', 
+                  cp_file = c('Model_files/temp-sp-cov.stan', 
                               '8-temp-cov.R'),
-                  cp_file_names = c(paste0('temp_sp_cov-', run_date, '.stan'),
+                  cp_file_names = c(paste0('temp-sp-cov-', run_date, '.stan'),
                                     paste0('8-temp-cov-', run_date, '.R')))
 
 # library(shinystan)

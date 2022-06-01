@@ -79,7 +79,9 @@ saveRDS(fout, paste0('daymet-processed-', daymet_process_date, '.rds'))
 ust <- unique(maps_data[,c('station', 'lng', 'lat')])
 env_out <- data.frame(station = rep(NA, (NROW(ust) * length(unique(fout$year)))),
                       year = NA,
-                      June_tmax = NA)
+                      May_tmax = NA,
+                      June_tmax = NA,
+                      July_tmax = NA)
 counter <- 1
 for (i in 1:NROW(ust))
 {
@@ -89,19 +91,27 @@ for (i in 1:NROW(ust))
   #filter env by lat/lng of station
   tenv <- dplyr::filter(fout, lat == ust$lat[i], lng == ust$lng[i])
   
-  #June 1 - Jun 30
+  #May 1 - May 30
+  drng_May <- 121:151
+  #June 1 - June 30
   drng_June <- 152:181
+  #July 1 - July 31
+  drng_July <- 182:212
  
   yrs <- unique(tenv$year)
   for (j in 1:length(yrs))
   {
     #j <- 1
+    tval_May <- dplyr::filter(tenv, yday %in% drng_May, year == yrs[j])
     tval_June <- dplyr::filter(tenv, yday %in% drng_June, year == yrs[j])
+    tval_July <- dplyr::filter(tenv, yday %in% drng_July, year == yrs[j])
     
     #fill df
     env_out$station[counter] <- ust$station[i]
     env_out$year[counter] <- yrs[j]
+    env_out$May_tmax[counter] <- mean(tval_May$tmax)
     env_out$June_tmax[counter] <- mean(tval_June$tmax)
+    env_out$July_tmax[counter] <- mean(tval_July$tmax)
 
     counter <- counter + 1
   }

@@ -14,11 +14,11 @@ si_tle_date <- '2021-07-28'
 #WI over time, lat, elev
 wi_tle_date <- '2021-07-28'
 #SI in response to spatial variation in temp
-si_temp_space_date <- '2021-07-30'
+si_temp_space_date <- '2022-05-25'
 #SI in response to temporal variation in temp
-si_temp_date <- '2021-07-30'
+si_temp_date <- '2022-05-25'
 #Spatial responses as a function of cov
-si_temp_sp_cov_date <- '2021-08-02'
+si_temp_sp_cov_date <- '2022-06-01'
 #Date Daymet data were processed
 daymet_process_date <- '2021-04-02'
 #Date MAPS data were processed
@@ -207,36 +207,96 @@ b_ch_SI_space <- (MCMCvis::MCMCchains(si_temp_space_fit, params = 'beta'))
 # compare response to space temp to temporal temp -------------------------
 
 #space is 10 degrees, time is 1 degree
-delta_l0 <- sample(mb_ch_SI_space[,1], 5000) - (sample(mg_ch_SI_L0[,1], 5000) * 10)
-delta_l1 <- sample(mb_ch_SI_space[,1], 5000) - (sample(mg_ch_SI_L1[,1], 5000) * 10)
-delta_l2 <- sample(mb_ch_SI_space[,1], 5000) - (sample(mg_ch_SI_L2[,1], 5000) * 10)
-
-mean(delta_l0) / (mean(mg_ch_SI_L0) * 10)
-mean(delta_l1) / (mean(mg_ch_SI_L1) * 10)
-mean(delta_l2) / (mean(mg_ch_SI_L2) * 10)
+#subtract means and add variances
+delta_l0_mn <- mean(mb_ch_SI_space) - mean(mg_ch_SI_L0 * 10)
+delta_l0_sd <- as.numeric(sqrt(var(mb_ch_SI_space) + var(mg_ch_SI_L0 * 10)))
 
 #species-specific
 space_samp <- sample(1:NROW(b_ch_SI_space), 5000)
 l0_samp <- sample(1:NROW(g_ch_SI_L0), 5000)
-delta_ss_l0 <- b_ch_SI_space[space_samp,] - (g_ch_SI_L0[l0_samp,] * 10)
+
+delta_ss_mn <- apply(b_ch_SI_space, 2, mean) - apply(g_ch_SI_L0 * 10, 2, mean)
+delta_ss_sd <- sqrt(apply(b_ch_SI_space, 2, var) + apply(g_ch_SI_L0 * 10, 2, var))
 
 #neg = larger negative impact of temp over space
-mn_delta <- apply(delta_ss_l0, 2, mean)
-sum(mn_delta < 0) / length(mn_delta)
+sum(delta_ss_mn < 0) / length(delta_ss_mn)
 
-pdf(paste(fig_dir, 'temp_space_temp_time.pdf'), height = 16, width = 8)
-MCMCvis::MCMCplot(delta_ss_l0, 
-                  #labels = usp,
-                  labels = cn,
-                  guide_lines = TRUE,
-                  ci = c(50, 89),
-                  sz_labels = 0.75,
-                  main = 'Spatial temp effect on SI - temporal temp effect on SI (per 10 degree C)', 
-                  sz_med = 1.75,
-                  sz_thick = 5,
-                  sz_thin = 3,
-                  xlim = c(-2, 3))
-dev.off()
+#plot spatial response vs. temporal response
+b_mn <- apply(b_ch_SI_space, 2, mean)
+b_sd <- apply(b_ch_SI_space, 2, sd)
+g_mn <- apply(g_ch_SI_L0 * 10, 2, mean)
+g_sd <- apply(g_ch_SI_L0 * 10, 2, sd)
+
+st_data <- data.frame(b_mn, b_sd, g_mn, g_sd)
+st2_data <- data.frame(mb_mn = mean(mb_ch_SI_space[,1]),
+                       mb_sd = sd(mb_ch_SI_space[,1]),
+                       mg_mn = mean(mg_ch_SI_L0[,1]*10),
+                       mg_sd = sd(mg_ch_SI_L0[,1]*10))
+
+#spatial vs. temporal
+st_temp_plt <- ggplot(data = st_data, 
+                      aes(b_mn, g_mn)) +
+  geom_vline(xintercept = 0, linetype = 'dashed', 
+             col = 'black', size = 2, alpha = 0.5) +
+  geom_hline(yintercept = 0, linetype = 'dashed', 
+             col = 'black', size = 2, alpha = 0.5) +
+  geom_errorbar(aes(ymin = g_mn - g_sd,
+                    ymax = g_mn + g_sd),
+                width = 0, 
+                size = 0.7,
+                color = 'black', alpha = 0.2) +
+  geom_errorbarh(aes(xmin = b_mn - b_sd,
+                     xmax = b_mn + b_sd),
+                 height = 0, 
+                 size = 0.7,
+                 color = 'black', alpha = 0.2) +
+  geom_point(color = 'black', size = 3, alpha = 0.3) +
+  geom_point(data = st2_data, 
+             aes(mb_mn, mg_mn), 
+             color = 'red', alpha = 0.8, size = 30,
+             pch = '*') +
+theme_bw() +
+  xlab('Temp sens over space (SI / 10 degree C)') +
+  ylab('Temp sens over time (SI / 10 degree C)') +
+  ylim(c(-0.4, 0.2)) +
+  xlim(c(-2, 1.5)) +
+  # geom_abline(slope = 1, #linetype = 'dotted',
+  #             col = 'red', size = 1, alpha = 0.8) +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 16),
+        axis.title = element_text(size = 18),
+        axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 15, r = 15, b = 0, l = 0)),
+        axis.ticks.length = unit(0.2, 'cm')) #length of axis tick
+
+#spatial - temporal
+tplt <- data.frame(mn = delta_ss_mn)
+tplt2 <- data.frame(dmn = delta_l0_mn,
+                    dsd = delta_l0_sd)
+pnt_plt <- ggplot(tplt, aes(0, mn)) +
+  geom_jitter(shape = 1, alpha = 0.5, size = 4, height = 0,
+              width = 0.8) +
+  geom_hline(yintercept = 0,
+             linetype = 'dashed',
+             size = 2,
+             alpha = 0.4) +
+  geom_point(aes(0, tplt2$dmn), inherit.aes = FALSE, color = 'red', pch = '*',
+             size = 40, alpha = 0.05) +
+  xlim(-2, 2) +
+  ylab('Spatial temp response - temporal temp response') +
+  xlab('') +
+  theme_bw() +
+  theme(legend.position = 'none',
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 16),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title = element_text(size = 18),
+        axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 15, r = 15, b = 0, l = 0)),
+        axis.ticks.length = unit(0.2, 'cm')) #length of axis tick
             
 
 # WI LAT param est --------------------------------------------------------------------
@@ -518,18 +578,18 @@ L <- 25
 #get range of temp anomalies
 si_temp_l0_data$pro_data %>%
   group_by(cn_id) %>%
-  summarize(min_t = min(scale(June_tmax, scale = FALSE)[,1] / si_temp_l0_data$scf_temp),
-            max_t = max(scale(June_tmax, scale = FALSE)[,1] / si_temp_l0_data$scf_temp)) -> l0_rng
+  summarize(min_t = min(scale(MJJ_tmax, scale = FALSE)[,1] / si_temp_l0_data$scf_temp),
+            max_t = max(scale(MJJ_tmax, scale = FALSE)[,1] / si_temp_l0_data$scf_temp)) -> l0_rng
 
 si_temp_l1_data$pro_data %>%
   group_by(cn_id) %>%
-  summarize(min_t = min(scale(June_tmax, scale = FALSE)[,1] / si_temp_l0_data$scf_temp),
-            max_t = max(scale(June_tmax, scale = FALSE)[,1]) / si_temp_l0_data$scf_temp) -> l1_rng
+  summarize(min_t = min(scale(MJJ_tmax, scale = FALSE)[,1] / si_temp_l0_data$scf_temp),
+            max_t = max(scale(MJJ_tmax, scale = FALSE)[,1]) / si_temp_l0_data$scf_temp) -> l1_rng
 
 si_temp_l2_data$pro_data %>%
   group_by(cn_id) %>%
-  summarize(min_t = min(scale(June_tmax, scale = FALSE)[,1] / si_temp_l0_data$scf_temp),
-            max_t = max(scale(June_tmax, scale = FALSE)[,1]) / si_temp_l0_data$scf_temp) -> l2_rng
+  summarize(min_t = min(scale(MJJ_tmax, scale = FALSE)[,1] / si_temp_l0_data$scf_temp),
+            max_t = max(scale(MJJ_tmax, scale = FALSE)[,1]) / si_temp_l0_data$scf_temp) -> l2_rng
 
 tc <- c(min(l0_rng$min_t), max(l0_rng$max_t), 
         min(l1_rng$min_t), max(l1_rng$max_t),
@@ -790,16 +850,17 @@ dev.off()
 
 #to get absolute temp not anom
 setwd(paste0(dir, '/Data/daymet/processed/'))
-daymet <- readRDS(paste0('daymet-master-', daymet_process_date, '.rds'))
+daymet <- readRDS(paste0('daymet-master-', daymet_process_date, '.rds')) %>%
+  mutate(MJJ_tmax = (May_tmax + June_tmax + July_tmax) / 3) #using mean here does not do what might be expected
 si_tsd <- dplyr::select(si_temp_space_data$pro_data, sci_name, sp_id, station, cn_id, lat, 
                         lng, year, GMTED_elev, size_idx) %>%
   dplyr::left_join(daymet, by = c('station', 'year')) %>%
   dplyr::arrange(sp_id, cn_id) %>%
   dplyr::group_by(sp_id, cn_id) %>%
-  dplyr::summarize(mn_June_tmax = mean(June_tmax)) %>%
+  dplyr::summarize(mn_MJJ_tmax = mean(MJJ_tmax)) %>%
   dplyr::ungroup() %>%
   dplyr::group_by(sp_id) %>%
-  dplyr::summarize(smt = mean(mn_June_tmax))
+  dplyr::summarize(smt = mean(mn_MJJ_tmax))
 mean(si_tsd$smt)
 range(si_tsd$smt)
 
@@ -1073,7 +1134,7 @@ wi_theta_ch <- MCMCvis::MCMCchains(wi_fit, params = 'theta')
 #add mn station temp and effect of temp on SI
 si_temp_l0_data$pro_data %>%
   dplyr::group_by(cn_id) %>%
-  dplyr::summarize(mn_st_temp = mean(June_tmax)) %>%
+  dplyr::summarize(mn_st_temp = mean(MJJ_tmax)) %>%
   dplyr::ungroup() -> mn_t
 
 dplyr::distinct(si_temp_l0_data$pro_data, sci_name, station, cn_id, lat, lng) %>%
@@ -1081,11 +1142,15 @@ dplyr::distinct(si_temp_l0_data$pro_data, sci_name, station, cn_id, lat, lng) %>
 
 mn_t2$si_temp_beta_mn <- MCMCvis::MCMCpstr(si_temp_l0_fit, params = 'beta')[[1]] / si_temp_l0_data$scf_temp
 
-#read in temperature data to get June tmax for 2018 - for contours
+#read in temperature data to get MJJ tmax for 2018 - for contours
+dm_2018_M_tm <- raster::raster(paste0(dir, 'Data/daymet/RAW/daymet_v4_tmax_monavg_na_2018.tif'), band = 5)
 dm_2018_June_tm <- raster::raster(paste0(dir, 'Data/daymet/RAW/daymet_v4_tmax_monavg_na_2018.tif'), band = 6)
-#coarsen to reduce plot time
-dm_2018_June_tm_ag <- raster::aggregate(dm_2018_June_tm, fact = 100)
+dm_2018_July_tm <- raster::raster(paste0(dir, 'Data/daymet/RAW/daymet_v4_tmax_monavg_na_2018.tif'), band = 7)
 
+dm_2018_MJJ_tm <- calc(raster::stack(c(dm_2018_M_tm, dm_2018_June_tm, 
+                                       dm_2018_July_tm)), fun = mean)
+#coarsen to reduce plot time
+dm_2018_MJJ_tm_ag <- raster::aggregate(dm_2018_MJJ_tm, fact = 100)
 
 #need to include underscore between genus and species name
 #creates pdf of early year idx (SI or WI or temp), late year idx, and plot for legend
@@ -1295,10 +1360,10 @@ map_fun <- function(species, out_dir, idx = 'WI', station = FALSE,
       print('Creating plots')
       
       #reproject temp
-      dm_2018_June_tm_ag_tr <- raster::projectRaster(from = dm_2018_June_tm_ag, 
+      dm_2018_MJJ_tm_ag_tr <- raster::projectRaster(from = dm_2018_MJJ_tm_ag, 
                                                      crs = sp::CRS(sp::proj4string(spdf_brng_sb)))
       #mask over just breeding/resident range
-      temp_msk <- raster::crop(raster::mask(dm_2018_June_tm_ag_tr, spdf_brng_sb), extent(spdf_brng_sb))
+      temp_msk <- raster::crop(raster::mask(dm_2018_MJJ_tm_ag_tr, spdf_brng_sb), extent(spdf_brng_sb))
       
       temp_mask_spdf <- as.data.frame(as(temp_msk, 'SpatialPixelsDataFrame'))
       colnames(temp_mask_spdf) <- c('value', 'x', 'y')

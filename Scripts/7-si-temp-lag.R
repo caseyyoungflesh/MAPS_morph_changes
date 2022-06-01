@@ -5,7 +5,7 @@
 
 # set dir ----------------------------------------------------------------
 
-run_date <- '2022-01-23'
+run_date <- '2022-05-25'
 maps_master_date <- '2021-07-28'
 idx_tle_date <- '2021-07-28'
 daymet_process_date <- '2021-04-02'
@@ -24,7 +24,8 @@ library(MCMCvis)
 
 #read in daymet data
 setwd(paste0(dir, '/Data/daymet/processed/'))
-daymet <- readRDS(paste0('daymet-master-', daymet_process_date, '.rds'))
+daymet <- readRDS(paste0('daymet-master-', daymet_process_date, '.rds')) %>%
+  mutate(MJJ_tmax = (May_tmax + June_tmax + July_tmax) / 3) #using mean here does not do what might be expected
 
 #read in morph fit data
 setwd(paste0(dir, '/Results/si-tle-', idx_tle_date))
@@ -46,26 +47,21 @@ daymet_l0 <- daymet
 daymet_l0$actual_year <- daymet_l0$year
 daymet_l0$year <- daymet_l0$year + YR_LAG
 mdata_l0 <- dplyr::left_join(mdata, daymet_l0, by = c('station', 'year')) %>%
-  dplyr::mutate(sc_temp = scale(June_tmax, scale = FALSE)[,1] / scf_temp)
+  dplyr::mutate(sc_temp = scale(MJJ_tmax, scale = FALSE)[,1] / scf_temp)
 
 YR_LAG <- 1
 daymet_l1 <- daymet
 daymet_l1$actual_year <- daymet_l1$year
 daymet_l1$year <- daymet_l1$year + YR_LAG
 mdata_l1 <- dplyr::left_join(mdata, daymet_l1, by = c('station', 'year')) %>%
-  dplyr::mutate(sc_temp = scale(June_tmax, scale = FALSE)[,1] / scf_temp)
+  dplyr::mutate(sc_temp = scale(MJJ_tmax, scale = FALSE)[,1] / scf_temp)
 
 YR_LAG <- 2
 daymet_l2 <- daymet
 daymet_l2$actual_year <- daymet_l2$year
 daymet_l2$year <- daymet_l2$year + YR_LAG
 mdata_l2 <- dplyr::left_join(mdata, daymet_l2, by = c('station', 'year')) %>%
-  dplyr::mutate(sc_temp = scale(June_tmax, scale = FALSE)[,1] / scf_temp)
-
-#mean station temp
-mn_st_temp <- dplyr::group_by(daymet, station) %>%
-  dplyr::summarize(mn_st_temp = mean(June_tmax)) %>%  
-  dplyr::ungroup()
+  dplyr::mutate(sc_temp = scale(MJJ_tmax, scale = FALSE)[,1] / scf_temp)
 
 #sp_id for each cn_id
 cn_sp <- unique(mdata_l0[,c('sp_id', 'cn_id')])
@@ -73,12 +69,10 @@ cn_sp <- unique(mdata_l0[,c('sp_id', 'cn_id')])
 
 # Data L0 --------------------------------------------------------------
 
-#join with mean station temp and scale mean station temp within each species
-#needs to be ordered by cn_sp (species ID for each cn_id)
-mn_st_temp_df_l0 <- dplyr::left_join(mdata_l0, mn_st_temp, by = 'station') %>%
-  dplyr::select(station, sp_id, cn_id, mn_st_temp) %>%
-  dplyr::distinct(cn_id, .keep_all = TRUE) %>%
-  dplyr::group_by(sp_id) %>%
+#calculate mean temp each cn_id, then scale within each species
+mn_st_temp_df_l0 <- mdata_l0 %>%
+  dplyr::group_by(sp_id, cn_id) %>%
+  dplyr::summarize(mn_st_temp = mean(MJJ_tmax)) %>%
   dplyr::mutate(sc_mn_st_temp = scale(mn_st_temp, scale = FALSE)[,1] / scf_temp) %>%
   dplyr::ungroup()
 
@@ -210,9 +204,9 @@ MCMCvis::MCMCdiag(fit_l0,
                   add_obj_names = c(paste0('si-temp-l0-data-', run_date),
                                     paste0('ppc-sim-l0-', run_date)),
                   cp_file = c('Model_files/morph-temp-ss2.stan', 
-                              '8-si-temp-lag.R'),
+                              '7-si-temp-lag.R'),
                   cp_file_names = c(paste0('morph-temp-ss2-', run_date, '.stan'),
-                                    paste0('8-si-temp-lag-', run_date, '.R')))
+                                    paste0('7-si-temp-lag-', run_date, '.R')))
 
 # library(shinystan)
 # shinystan::launch_shinystan(fit)
@@ -220,12 +214,10 @@ MCMCvis::MCMCdiag(fit_l0,
 
 # Data L1 --------------------------------------------------------------
 
-#join with mean station temp and scale mean station temp within each species
-#needs to be ordered by cn_sp (species ID for each cn_id)
-mn_st_temp_df_l1 <- dplyr::left_join(mdata_l1, mn_st_temp, by = 'station') %>%
-  dplyr::select(station, sp_id, cn_id, mn_st_temp) %>%
-  dplyr::distinct(cn_id, .keep_all = TRUE) %>%
-  dplyr::group_by(sp_id) %>%
+#calculate mean temp each cn_id, then scale within each species
+mn_st_temp_df_l1 <- mdata_l1 %>%
+  dplyr::group_by(sp_id, cn_id) %>%
+  dplyr::summarize(mn_st_temp = mean(MJJ_tmax)) %>%
   dplyr::mutate(sc_mn_st_temp = scale(mn_st_temp, scale = FALSE)[,1] / scf_temp) %>%
   dplyr::ungroup()
 
@@ -236,12 +228,12 @@ DATA_l1 <- list(N = NROW(mdata_l1), #number of temp data points
                 temp = mdata_l1$sc_temp,
                 mn_st_temp = mn_st_temp_df_l1$sc_mn_st_temp, #mean temp at each station, centered for each species
                 sp = mdata_l1$sp_id,
-                cn_id = mdata_l1$cn_id, 
-                cn_sp = cn_sp$sp_id, 
+                cn_id = mdata_l1$cn_id,
+                cn_sp = cn_sp$sp_id,
                 daymet = daymet,
                 scf_temp = scf_temp,
                 mn_st_temp_df_l1 = mn_st_temp_df_l1,
-                pro_data = mdata_l1) 
+                pro_data = mdata_l1)
 
 
 # Call Stan model l1 --------------------------------------------------------------
@@ -301,9 +293,9 @@ MCMCvis::MCMCdiag(fit_l1,
                   add_obj_names = c(paste0('si-temp-l1-data-', run_date),
                                     paste0('ppc-sim-l1-', run_date)),
                   cp_file = c('Model_files/morph-temp-ss2.stan', 
-                              '8-si-temp-lag.R'),
+                              '7-si-temp-lag.R'),
                   cp_file_names = c(paste0('morph-temp-ss2-', run_date, '.stan'),
-                                    paste0('8-si-temp-lag-', run_date, '.R')))
+                                    paste0('7-si-temp-lag-', run_date, '.R')))
 
 # library(shinystan)
 # shinystan::launch_shinystan(fit)
@@ -311,12 +303,10 @@ MCMCvis::MCMCdiag(fit_l1,
 
 # Data l2 --------------------------------------------------------------
 
-#join with mean station temp and scale mean station temp within each species
-#needs to be ordered by cn_sp (species ID for each cn_id)
-mn_st_temp_df_l2 <- dplyr::left_join(mdata_l2, mn_st_temp, by = 'station') %>%
-  dplyr::select(station, sp_id, cn_id, mn_st_temp) %>%
-  dplyr::distinct(cn_id, .keep_all = TRUE) %>%
-  dplyr::group_by(sp_id) %>%
+#calculate mean temp each cn_id, then scale within each species
+mn_st_temp_df_l2 <- mdata_l2 %>%
+  dplyr::group_by(sp_id, cn_id) %>%
+  dplyr::summarize(mn_st_temp = mean(MJJ_tmax)) %>%
   dplyr::mutate(sc_mn_st_temp = scale(mn_st_temp, scale = FALSE)[,1] / scf_temp) %>%
   dplyr::ungroup()
 
@@ -392,9 +382,9 @@ MCMCvis::MCMCdiag(fit_l2,
                   add_obj_names = c(paste0('si-temp-l2-data-', run_date),
                                     paste0('ppc-sim-l2-', run_date)),
                   cp_file = c('Model_files/morph-temp-ss2.stan', 
-                              '8-si-temp-lag.R'),
+                              '7-si-temp-lag.R'),
                   cp_file_names = c(paste0('morph-temp-ss2-', run_date, '.stan'),
-                                    paste0('8-si-temp-lag-', run_date, '.R')))
+                                    paste0('7-si-temp-lag-', run_date, '.R')))
 
 # library(shinystan)
 # shinystan::launch_shinystan(fit)

@@ -15,8 +15,10 @@ parameters {
 real mu_alpha;
 real<lower=0> sigma_alpha;
 vector<offset = mu_alpha, multiplier = sigma_alpha>[Nsp] alpha;
+// vector[Nsp] alpha;
 real<lower=1> nu;
 vector[Nsc] xi_raw;
+// vector[Nsc] xi;
 vector<lower=0>[Nsp] sigma_xi;
 real<lower=0> lambda_xi;
 real<lower=0> kappa_xi;
@@ -26,6 +28,7 @@ real<lower=0> kappa_proc;
 real mu_beta;
 real<lower=0> sigma_beta;
 vector<offset = mu_beta, multiplier = sigma_beta>[Nsp] beta;
+// vector[Nsp] beta;
 }
 
 transformed parameters {
@@ -53,8 +56,11 @@ kappa_proc ~ std_normal();
 nu ~ gamma(2, 0.1);             // degrees of freedom parameter
 
 // centered
+// alpha ~ normal(mu_alpha, sigma_alpha);
+// beta ~ normal(mu_beta, sigma_beta);
 sigma_proc ~ normal(lambda_proc, kappa_proc);
 sigma_xi ~ normal(lambda_xi, kappa_xi);
+// xi ~ normal(mu_xi, sigma_xi[cn_sp]);
 
 // non-centered
 alpha ~ normal(mu_alpha, sigma_alpha);

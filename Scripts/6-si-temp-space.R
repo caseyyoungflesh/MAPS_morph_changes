@@ -6,7 +6,7 @@
 
 # set dir ----------------------------------------------------------------
 
-run_date <- '2021-07-30'
+run_date <- '2022-05-25'
 maps_master_date <- '2021-07-28'
 idx_tle_date <- '2021-07-28'
 daymet_process_date <- '2021-04-02'
@@ -21,25 +21,22 @@ library(rstan)
 library(MCMCvis)
 
 
-# process input data -------------------------------------------------------------
-
-#read in daymet data
-setwd(paste0(dir, '/Data/daymet/processed/'))
-daymet <- readRDS(paste0('daymet-master-', daymet_process_date, '.rds'))
+# read in data -------------------------------------------------------------
 
 #read in morph fit data
 setwd(paste0(dir, '/Results/si-tle-', idx_tle_date))
 morph_data <- readRDS(paste0('si-tle-data-', idx_tle_date, '.rds'))
 
+#read in env data
+setwd(paste0(dir, '/Data/daymet/processed'))
+daymet <- readRDS(paste0('daymet-master-', daymet_process_date, '.rds')) %>%
+  mutate(MJJ_tmax = (May_tmax + June_tmax + July_tmax) / 3) #using mean here does not do what might be expected
 
-# lag temp data ----------------------------------------------------------------
+
+# process temp data ----------------------------------------------------------------
 
 #data from 5-tle
 mdata <- morph_data$pro_data
-
-#read in env data
-setwd(paste0(dir, '/Data/daymet/processed'))
-daymet <- readRDS(paste0('daymet-master-', daymet_process_date, '.rds'))
 
 #merge env with MAPS
 mdata2 <- dplyr::select(mdata, sci_name, sp_id, station, cn_id, lat, lng, year, GMTED_elev, size_idx) %>%
@@ -58,9 +55,9 @@ scf_temp <- 10
 #mean temp (at each species/station) - scaled across dataset
 mn_st_temp <- mdata2 %>%
   dplyr::group_by(sp_id, cn_id) %>%
-  dplyr::summarize(mn_June_tmax = mean(June_tmax)) %>%
+  dplyr::summarize(mn_MJJ_tmax = mean(MJJ_tmax)) %>%
   dplyr::ungroup() %>%
-  dplyr::mutate(sc_mean_temp = scale(mn_June_tmax, scale = FALSE)[,1] / scf_temp)
+  dplyr::mutate(sc_mean_temp = scale(mn_MJJ_tmax, scale = FALSE)[,1] / scf_temp)
 
 Nsp <- length(unique(mdata2$sp_id))
 
@@ -176,7 +173,7 @@ MCMCvis::MCMCdiag(fit,
                   file_name = paste0('si-temp-space-results-', run_date),
                   dir = paste0(dir, '/Results'),
                   mkdir = paste0('si-temp-space-', run_date),
-                  add_field = 'June tmax',
+                  add_field = 'MJJ tmax',
                   add_field_names = 'Temp data',
                   probs = c(0.055, 0.5, 0.945),
                   pg0 = TRUE,
