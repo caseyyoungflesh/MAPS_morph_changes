@@ -1,6 +1,6 @@
 # MAPS_morph_changes 
 
-Code for Youngflesh et al. Accpeted at _Nature Ecology and Evolution_
+Code for Youngflesh et al. Accepted at _Nature Ecology and Evolution_
 
 This repository contains code to characterize avian morphological change over time, latitude, elevation, and in response to temperature.
 
