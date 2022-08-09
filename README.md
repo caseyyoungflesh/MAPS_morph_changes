@@ -1,10 +1,12 @@
 # MAPS_morph_changes 
 
-Code for characterizing avian morphological change over time, latitude, elevation, and in response to temperature.
+Code for Youngflesh et al. Accpeted at _Nature Ecology and Evolution_
+
+This repository contains code to characterize avian morphological change over time, latitude, elevation, and in response to temperature.
 
 **Associated publications:**
 
-Youngflesh, C, JF Saracco, RB Siegel, MW Tingley. [Abiotic conditions shape spatial and temporal morphological variation in North American birds.](https://www.biorxiv.org/content/10.1101/2022.02.17.480905v1) **_bioRxiv_**  doi: 10.1101/2022.02.17.480905
+Youngflesh, C, JF Saracco, RB Siegel, MW Tingley. Abiotic conditions shape spatial and temporal morphological variation in North American birds. **Accepted at _Nature Ecology and Evolution_**
 
 **Repository structure:**
 
