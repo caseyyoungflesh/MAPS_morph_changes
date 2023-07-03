@@ -10,7 +10,7 @@ This repository contains code to characterize avian morphological change over ti
 
 **Associated publications:**
 
-Youngflesh, C, JF Saracco, RB Siegel, MW Tingley. 2022. [Abiotic conditions shape spatial and temporal morphological variation in North American birds.](https://www.nature.com/articles/s41559-022-01893-x) **_Nature Ecology and Evolution_**
+Youngflesh, C, JF Saracco, RB Siegel, MW Tingley. 2022. [Abiotic conditions shape spatial and temporal morphological variation in North American birds.](https://www.nature.com/articles/s41559-022-01893-x) **_Nature Ecology and Evolution_** 6:1860-1870.
 
 
 **Repository structure:**
